@@ -1,0 +1,70 @@
+# Docker
+# Build and push an image to Azure Container Registry
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: '4795f454-1f32-4a96-85dd-78cac60dcb2b'
+  imageRepository: 'eduai'
+  containerRegistry: 'eduaidev.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: 'Build and push stage'
+  jobs:
+  - job: Build
+    displayName: 'Build'
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - checkout: self
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '14.x'
+      displayName: 'Install Node.js'
+    - script: |
+        npm install
+        npm run build
+      displayName: 'npm install and build'
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+# Deploy to Azure VM
+- stage: Deploy
+  displayName: Deploy to Azure VM
+  dependsOn: Build
+  condition: succeeded('Build')
+  jobs:
+  - job: Deploy
+    displayName: Deploy Job
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: SSH@0
+      displayName: 'SSH Copy and Deploy'
+      inputs:
+        sshEndpoint: 'SSHConnectionEndpoint'
+        runOptions: 'commands'
+        commands: |
+          echo $(password) | sudo docker login $(containerRegistry) -u $(username) --password-stdin 2>&1 | grep -v "WARNING! Your password will be stored unencrypted"
+          sudo docker pull $(containerRegistry)/$(imageRepository):$(tag)
+          sudo docker stop $(containerName) > /dev/null 2>&1 || true
+          sudo docker rm $(containerName) > /dev/null 2>&1 || true
+          sudo docker run --name $(containerName) -d -p 5000:5000 $(containerRegistry)/$(imageRepository):$(tag)

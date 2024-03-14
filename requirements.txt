@@ -1,0 +1,7 @@
+Flask
+Werkzeug
+azure-cognitiveservices-speech
+azure-storage-blob
+pytube
+openai==0.28.0
+openai-whisper
