@@ -8,7 +8,7 @@ from pytube.exceptions import AgeRestrictedError
 from azure_speechtotext_test import download_youtube_audio
 
 
-openai_api_key = "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"
+openai_api_key = ""
 
 # Now you can use the download_youtube_audio function in the current script
 
