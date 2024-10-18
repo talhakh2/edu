@@ -19,7 +19,7 @@ import pydub
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-azure_connection_string = 'DefaultEndpointsProtocol=https;AccountName=eduaistorage;AccountKey=JJ5hey8NTb8I+afO+CsZanvCpKBrvE2eCwkniwA37wOorTQkYHBKawWc9YCP6XIeQChVbQ18dD9++AStAeuqVA==;EndpointSuffix=core.windows.net'
+azure_connection_string = ''
 container_name = 'eduaistorage'
 
 # Summarize text with GPT-3.5
